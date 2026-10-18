@@ -5,12 +5,12 @@
 
 // 1) Configuración del proyecto de Firebase (no la cambies)
 export const firebaseConfig = {
-  apiKey: "PEGA_AQUI",
-  authDomain: "PEGA_AQUI",
-  projectId: "PEGA_AQUI",
-  storageBucket: "PEGA_AQUI",
-  messagingSenderId: "PEGA_AQUI",
-  appId: "PEGA_AQUI"
+  apiKey: "AIzaSyCWPvPp2uASsXhXSD3f_bW0PKiobhceWn8",
+  authDomain: "zona-plateada-357a4.firebaseapp.com",
+  projectId: "zona-plateada-357a4",
+  storageBucket: "zona-plateada-357a4.firebasestorage.app",
+  messagingSenderId: "1069610675961",
+  appId: "1:1069610675961:web:be8a53c3c4858c21673c28"
 };
 
 // 2) Datos del negocio
