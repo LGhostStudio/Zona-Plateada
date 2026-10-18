@@ -1,0 +1,13 @@
+{
+  "name": "Zona Plateada · Mi tarjeta",
+  "short_name": "Zona Plateada",
+  "description": "Tu tarjeta de cliente frecuente de Zona Plateada.",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "lang": "es-MX",
+  "icons": [
+    { "src": "icono-192.png?v=3", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icono-512.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

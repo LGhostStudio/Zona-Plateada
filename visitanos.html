@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-t="Visítanos · {nombre}">Visítanos · Zona Plateada</title>
+<meta name="description" content="Dirección, horario y contacto de Zona Plateada en Plaza La Luz, Camino Real de La Plata 200, Loc. 5 A, Pachuca." data-t="Dirección, horario y contacto de {nombre} en {calle}, {zona}, {ciudad}.">
+<meta name="theme-color" content="#050505">
+<link rel="icon" href="icono-192.png?v=3">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="colores.css?v=11">
+<link rel="stylesheet" href="sitio.css?v=11">
+<script src="animaciones.js" defer></script>
+<script type="module" src="sitio.js"></script>
+<script type="module" src="datos.js"></script>
+<script type="module" src="marca.js"></script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="razor">
+      <rect x="-92" y="-7" width="82" height="14" rx="7" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M-10,-10 L70,-13 Q86,-12 86,0 L86,4 Q86,9 78,9 L-10,9 Z" fill="currentColor"/>
+      <circle cx="-10" cy="0" r="4" fill="#0C0C0C"/>
+    </g>
+    <symbol id="razors" viewBox="0 0 200 120">
+      <use href="#razor" transform="translate(100,66) rotate(-32)"/>
+      <use href="#razor" transform="translate(100,66) scale(-1,1) rotate(-32)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html" aria-label="Zona Plateada, inicio">
+      <img class="brand-logo" src="logo.png" alt="Zona Plateada" width="900" height="377">
+    </a>
+    <nav class="links" aria-label="Principal">
+      <a href="index.html">Inicio</a>
+      <a href="servicios.html">Servicios</a>
+      <a href="galeria.html">Galería</a>
+      <a href="visitanos.html" aria-current="page">Visítanos</a>
+    </nav>
+    <a class="btn btn-primary btn-agenda" href="agendar.html">Agenda tu cita</a>
+  </div>
+  <div class="pole" aria-hidden="true"></div>
+</header>
+
+<main>
+  <section class="wrap page-head">
+    <h1 class="display fx d1">Visítanos<span class="script">te esperamos</span></h1>
+    <p class="fx d2"><i data-t="Estamos en {zona}." style="font-style:normal">Estamos en Zona Plateada.</i> Llega sin cita o agenda en línea.</p>
+  </section>
+
+  <section class="wrap block reveal" style="padding-top:40px">
+    <div class="visit">
+      <div class="visit-card">
+        <h2 class="display">Dónde y cuándo</h2>
+        <div class="row">
+          <svg class="v-ico" width="22" height="22" viewBox="0 0 24 24" fill="none" style="stroke:var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          <div><i data-t="{calle}, {zona}" style="font-style:normal;color:inherit">Plaza La Luz, Camino Real de La Plata 200, Loc. 5 A</i><br><span data-t="{cp} {ciudadOficial}, {estado}">42084 Pachuca de Soto, Hgo.</span></div>
+        </div>
+        <div class="row">
+          <svg class="v-ico" width="22" height="22" viewBox="0 0 24 24" fill="none" style="stroke:var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <div>Lunes a domingo · 9:30 a 20:30</div>
+        </div>
+        <div class="actions" style="margin-top:4px">
+          <a class="btn btn-primary" data-href="maps" href="https://www.google.com/maps/search/?api=1&amp;query=Barber%C3%ADa%20Zona%20Plateada%20Pachuca" target="_blank" rel="noopener">Abrir en Google Maps</a>
+          <a class="btn btn-ghost" data-href="tel" href="tel:+527717830698">Llamar</a>
+          <a class="btn btn-ghost" href="agendar.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> Agendar</a>
+        </div>
+      </div>
+      <figure class="shot facade foto"><button type="button" class="zoom" aria-label="Ver foto de la fachada en grande"><img src="fachada.jpg" alt="Fachada de Barbería Zona Plateada" loading="lazy" width="664" height="873"></button></figure>
+    </div>
+  </section>
+
+  <section id="barberos" class="wrap block reveal" style="padding-top:24px;padding-bottom:64px">
+    <div class="sec-head">
+      <h2 class="display">Quién te <span class="script">corta</span></h2>
+      <p>Conoce al equipo y síguelo en redes</p>
+    </div>
+    <div class="barber-grid" id="listaBarberos"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div><img class="foot-logo" src="logo.png" alt="Zona Plateada" width="900" height="377"><span data-t="{nombreGoogle} · {zona}">Barbería Zona Plateada · Zona Plateada</span></div>
+      <div class="foot-links"><span data-hay="facebook"><a data-href="facebook" href="#" target="_blank" rel="noopener">Facebook</a> · </span><span data-hay="instagram"><a data-href="instagram" href="#" target="_blank" rel="noopener">Instagram</a> · </span><span data-hay="tiktok"><a data-href="tiktok" href="#" target="_blank" rel="noopener">TikTok</a> · </span><a data-href="whatsapp" href="https://wa.me/527717830698" target="_blank" rel="noopener">WhatsApp</a> · <a href="tarjeta.html">Mi tarjeta</a> · <a href="privacidad.html">Aviso de privacidad</a></div>
+      <div>Sitio hecho por <a class="lilghost" href="https://lilghost99.github.io/Studio/" target="_blank" rel="noopener">LilGhost Studio</a></div>
+    </div>
+  </div>
+</footer>
+
+<a class="float" data-href="whatsapp" data-msg="Hola, tengo una pregunta" href="https://wa.me/527717830698?text=Hola%2C%20tengo%20una%20pregunta" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>
+</a>
+
+</body>
+</html>

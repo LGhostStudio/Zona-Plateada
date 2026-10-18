@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Cargar datos de ejemplo</title>
+<link rel="stylesheet" href="colores.css">
+<style>
+  body{margin:0;background:#050505;color:#eee;font:16px/1.5 system-ui,sans-serif;padding:24px}
+  main{max-width:560px;margin:auto}
+  h1{font-size:26px;margin:0 0 6px}
+  p{color:#aaa}
+  button{font:inherit;font-weight:700;padding:14px 20px;border-radius:12px;border:0;cursor:pointer;margin:6px 8px 6px 0;background:var(--gold);color:#050505}
+  button.sec{background:#222;color:#eee;border:1px solid #444}
+  button:disabled{opacity:.4}
+  #log{white-space:pre-wrap;background:#111;border:1px solid #222;border-radius:12px;padding:14px;margin-top:16px;font-size:14px;min-height:60px}
+  .aviso{background:#2a1d00;border:1px solid #6b4b00;border-radius:12px;padding:12px 14px;color:#ffd78a}
+</style>
+</head>
+<body>
+<main>
+  <h1>Datos de ejemplo</h1>
+  <p>Llena el panel con clientes, citas, caja y números <b>inventados</b> para la demo. Todo lleva la marca <code>demo</code> y se borra con un botón.</p>
+  <div class="aviso">Primero entra a <a href="admin.html" style="color:inherit">admin.html</a> con tu cuenta de admin y luego vuelve aquí. <b>Borra este archivo del repo antes de entregar la página.</b></div>
+  <p id="quien">Revisando sesión…</p>
+  <button id="cargar" disabled>Cargar datos de ejemplo</button>
+  <button id="borrar" class="sec" disabled>Borrar datos de ejemplo</button>
+  <div id="log"></div>
+</main>
+<script type="module">
+import { db, auth, configurado } from "./firebase.js";
+import { NEGOCIO } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { collection, doc, getDocs, query, where, writeBatch, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = (id) => document.getElementById(id);
+const log = (t) => { $("log").textContent += t + "\n"; };
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const hh = (min) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+const mes = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+// Números con semilla fija: cada carga da lo mismo
+let seed = 20261018;
+const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+const pick = (a) => a[Math.floor(rnd() * a.length)];
+const entre = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+
+const NOMBRES = ["Luis Ángel","Carlos M.","Diego R.","Jorge H.","Miguel S.","Emiliano T.","Brandon L.","Kevin A.","Rodrigo P.","Fernando C.","Iván G.","Alan V.","Sebastián O.","Ricardo B.","Daniel F.","Mateo J.","Gael N.","Axel D.","Leonardo K.","Santiago W."];
+const SERV = NEGOCIO.servicios.filter((s) => !s.soloCaja);
+const PESO_SERV = ["corte","corte","corte","corte","corte-junior","paquete-clasico","paquete-clasico","barba-bigote","paquete-diamante","paquete-rey","cejas","grecas","afeitado","facial-premium"];
+const servPor = (id) => SERV.find((s) => s.id === id) || SERV[0];
+const METODOS = ["efectivo","efectivo","efectivo","transferencia","terminal"];
+const GASTOS = [["Navajas y cuchillas",180],["Talco y espuma",260],["Toallas",350],["Productos para barba",420],["Luz del local",600]];
+
+async function escribir(ops) {
+  for (let i = 0; i < ops.length; i += 400) {
+    const lote = writeBatch(db);
+    ops.slice(i, i + 400).forEach(([ref, datos]) => lote.set(ref, datos));
+    await lote.commit();
+  }
+}
+
+async function cargar() {
+  const ops = [];
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const marca = { demo: true };
+
+  // Clientes
+  const clientes = NOMBRES.map((n, i) => {
+    const ref = doc(collection(db, "clientes"));
+    const sellos = i % 10, tarjetas = i % 4 === 0 ? 1 : 0;
+    const cumple = String(entre(1, 12)).padStart(2, "0") + "-" + String(entre(1, 28)).padStart(2, "0");
+    ops.push([ref, { nombre: n, telefono: "7710000" + String(100 + i).padStart(3, "0"), cumple, sellos, facialCanjeado: sellos >= 5, tarjetas,
+      creado: Timestamp.fromDate(new Date(hoy.getTime() - entre(5, 170) * 86400000)), ...marca }]);
+    return { id: ref.id, nombre: n, telefono: "7710000" + String(100 + i).padStart(3, "0") };
+  });
+
+  // Citas del pasado (6 meses) → números, y cobros de los últimos 45 días → caja
+  const stats = {};
+  const ocupados = new Set();
+  for (let d = 170; d >= 1; d--) {
+    const dia = new Date(hoy.getTime() - d * 86400000);
+    const n = dia.getDay() === 0 ? entre(1, 3) : entre(2, 6);
+    for (let k = 0; k < n; k++) {
+      const c = pick(clientes), sv = servPor(pick(PESO_SERV));
+      const r = rnd();
+      const estado = r < 0.84 ? "atendida" : r < 0.93 ? "cancelada" : "novino";
+      const hora = hh(570 + entre(0, 20) * 30);
+      const fecha = iso(dia);
+      const ref = doc(collection(db, "citas"));
+      ops.push([ref, { nombre: c.nombre, telefono: c.telefono, servicioId: sv.id, servicio: sv.nombre, precio: sv.conCita, precioNormal: sv.conCita, min: sv.min || 60,
+        fecha, hora, promo: "", barbero: "", comentario: "", clienteId: c.id, nuevaTarjeta: false, estado, origen: "web", cobrada: estado === "atendida",
+        creado: Timestamp.fromDate(dia), ...marca }]);
+      const m = mes(dia); stats[m] = stats[m] || { visitas: 0, premios5: 0, premios10: 0 };
+      if (estado === "atendida") {
+        stats[m].visitas++;
+        if (rnd() < 0.08) stats[m].premios5++;
+        if (rnd() < 0.03) stats[m].premios10++;
+        if (d <= 45) {
+          ops.push([doc(collection(db, "caja")), { tipo: "ingreso", concepto: sv.nombre + " (cita)", servicioId: sv.id, conCita: true, monto: sv.conCita,
+            propina: rnd() < 0.3 ? pick([20, 30, 50]) : 0, metodo: pick(METODOS), barbero: "", citaId: ref.id, clienteId: c.id,
+            fecha, hora, por: "demo", creado: Timestamp.fromDate(dia), ...marca }]);
+        }
+      }
+    }
+  }
+  // Gastos del mes
+  for (let d = 28; d >= 3; d -= 6) {
+    const dia = new Date(hoy.getTime() - d * 86400000), [concepto, monto] = pick(GASTOS);
+    ops.push([doc(collection(db, "caja")), { tipo: "gasto", concepto, monto, propina: 0, metodo: "efectivo", fecha: iso(dia), hora: "10:15", por: "demo", creado: Timestamp.fromDate(dia), ...marca }]);
+  }
+
+  // Hoy: algunas ya atendidas (para cobrar) y las demás confirmadas
+  for (let k = 0; k < 8; k++) {
+    const c = clientes[k], sv = servPor(pick(PESO_SERV));
+    const min = 570 + k * 60 + (k % 2) * 30;
+    const hora = hh(min), fecha = iso(hoy);
+    const ahora = new Date().getHours() * 60 + new Date().getMinutes();
+    const estado = min + 60 < ahora ? "atendida" : "confirmada";
+    const ref = doc(collection(db, "citas"));
+    ops.push([ref, { nombre: c.nombre, telefono: c.telefono, servicioId: sv.id, servicio: sv.nombre, precio: sv.conCita, precioNormal: sv.conCita, min: sv.min || 60,
+      fecha, hora, promo: "", barbero: "", comentario: "", clienteId: c.id, nuevaTarjeta: false, estado, origen: "web", creado: Timestamp.now(), ...marca }]);
+    ocupados.add(JSON.stringify({ fecha, hora, min: sv.min || 60 }));
+  }
+  // Próximos 6 días: confirmadas y algunas por confirmar
+  for (let d = 1; d <= 6; d++) {
+    const dia = new Date(hoy.getTime() + d * 86400000);
+    if (dia.getDay() === 0 && rnd() < 0.5) continue;
+    let min = 570 + entre(0, 3) * 30;
+    for (let k = 0; k < entre(3, 5); k++) {
+      const c = pick(clientes), sv = servPor(pick(PESO_SERV));
+      const hora = hh(min), fecha = iso(dia);
+      min += Math.max(60, Math.ceil((sv.min || 60) / 30) * 30) + entre(0, 2) * 30;
+      if (min > 1200) break;
+      const ref = doc(collection(db, "citas"));
+      ops.push([ref, { nombre: c.nombre, telefono: c.telefono, servicioId: sv.id, servicio: sv.nombre, precio: sv.conCita, precioNormal: sv.conCita, min: sv.min || 60,
+        fecha, hora, promo: "", barbero: "", comentario: "", clienteId: c.id, nuevaTarjeta: false, estado: rnd() < 0.3 ? "pendiente" : "confirmada", origen: "web", creado: Timestamp.now(), ...marca }]);
+      ocupados.add(JSON.stringify({ fecha, hora, min: sv.min || 60 }));
+    }
+  }
+  ocupados.forEach((s) => { const o = JSON.parse(s); ops.push([doc(db, "ocupados", `${o.fecha}_${o.hora}`), { ...o, creado: Timestamp.now(), ...marca }]); });
+
+  // Números por mes
+  Object.entries(stats).forEach(([m, v]) => ops.push([doc(db, "stats", m), { ...v, ...marca }]));
+
+  // Promos de ejemplo
+  [["Promo de ejemplo: martes de corte", "Texto de ejemplo para la demo."], ["Promo de ejemplo: trae a un amigo", "Texto de ejemplo para la demo."]]
+    .forEach(([titulo, detalle]) => ops.push([doc(collection(db, "promos")), { titulo, detalle, activa: true, creado: Timestamp.now(), ...marca }]));
+
+  log(`Escribiendo ${ops.length} registros…`);
+  await escribir(ops);
+  log("Listo. Abre admin.html y revisa Citas, Caja, Números y Clientes.");
+}
+
+async function borrar() {
+  let total = 0;
+  for (const col of ["clientes", "citas", "ocupados", "caja", "stats", "promos"]) {
+    const snap = await getDocs(query(collection(db, col), where("demo", "==", true)));
+    for (let i = 0; i < snap.docs.length; i += 400) {
+      const lote = writeBatch(db);
+      snap.docs.slice(i, i + 400).forEach((d) => lote.delete(d.ref));
+      await lote.commit();
+    }
+    total += snap.size;
+    log(`${col}: ${snap.size} borrados`);
+  }
+  log(`Listo: ${total} registros de ejemplo borrados.`);
+}
+
+const correr = (fn, btn) => async () => {
+  $("cargar").disabled = $("borrar").disabled = true; $("log").textContent = "";
+  try { await fn(); } catch (e) { console.error(e); log("Error: " + (e.code || e.message)); }
+  $("cargar").disabled = $("borrar").disabled = false;
+};
+if (!configurado) {
+  $("quien").textContent = "Falta pegar la configuración de Firebase en firebase-config.js.";
+} else {
+  onAuthStateChanged(auth, (u) => {
+    $("quien").textContent = u ? `Sesión: ${u.email}` : "No hay sesión. Entra primero a admin.html.";
+    $("cargar").disabled = $("borrar").disabled = !u;
+  });
+  $("cargar").onclick = correr(cargar);
+  $("borrar").onclick = correr(borrar);
+}
+</script>
+</body>
+</html>
