@@ -591,5 +591,6 @@
   .reward{padding:28px 22px}
   .reward-list li{grid-template-columns:96px minmax(0,1fr);font-size:16px}
   .nav{justify-content:center}
-  .brand-logo{height:58px}
+  .brand-logo{height:96px}
+  .foot-logo{height:72px}
 }
